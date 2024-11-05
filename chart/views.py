@@ -110,8 +110,6 @@ def convert_data_to_candles(request):
     except Exception as e:
         return HttpResponse(f"خطا در تبدیل داده‌ها به کندل‌ها: {str(e)}")
 
-
-
 def convert_to_candles(data, time_delta):
     candles = []
     start_time = None
@@ -128,17 +126,12 @@ def convert_to_candles(data, time_delta):
             continue
 
         if time - start_time >= time_delta:
-            # کاهش بیشتر تغییرات تصادفی برای نوسانات کمتر
-            close_price = current_candle_data[-1] + random.uniform(-0.000001, 0.000001)
-            open_price = (
-                previous_close_price
-                if previous_close_price is not None
-                else close_price
-            )
+            close_price = sum(current_candle_data) / len(current_candle_data)
+            open_price = previous_close_price if previous_close_price else close_price
 
-            # کاهش بیشتر نوسان برای high و low
-            high_price = close_price + random.uniform(0.000001, 0.000005)
-            low_price = close_price - random.uniform(0.000001, 0.000005)
+            # استفاده از مقدار حداقل و حداکثر داده‌ها برای high و low
+            high_price = max(current_candle_data)  # بالاترین مقدار واقعی
+            low_price = min(current_candle_data)   # پایین‌ترین مقدار واقعی
 
             candles.append(
                 {
@@ -157,13 +150,11 @@ def convert_to_candles(data, time_delta):
             current_candle_data.append(value)
 
     if current_candle_data:
-        close_price = current_candle_data[-1] + random.uniform(-0.000001, 0.000001)
-        open_price = (
-            previous_close_price if previous_close_price is not None else close_price
-        )
+        close_price = sum(current_candle_data) / len(current_candle_data)
+        open_price = previous_close_price if previous_close_price else close_price
 
-        high_price = close_price + random.uniform(0.000001, 0.000005)
-        low_price = close_price - random.uniform(0.000001, 0.000005)
+        high_price = max(current_candle_data)
+        low_price = min(current_candle_data)
 
         candles.append(
             {
@@ -176,6 +167,7 @@ def convert_to_candles(data, time_delta):
         )
 
     return candles
+
 
 class PriceChangePercentageAPIView(APIView):
     def get(self, request, format=None):
